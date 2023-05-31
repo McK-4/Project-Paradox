@@ -44,6 +44,33 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Jump"",
+                    ""type"": ""Button"",
+                    ""id"": ""3c15c21c-5c0d-42f3-b0c3-e058b5d536d7"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Grapple"",
+                    ""type"": ""Button"",
+                    ""id"": ""3e44828d-1608-4277-9835-c973fb9eb2f5"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GrapplePull"",
+                    ""type"": ""Button"",
+                    ""id"": ""b6917120-4387-4b04-b34c-efe05ead1725"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -112,6 +139,39 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""action"": ""Mouse"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""281f4496-2ba1-4ed6-afdf-a1cad02a464c"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8807bca4-a202-4ae5-9f80-f4720f8516ff"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Grapple"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""03c9d2ac-03d6-4a39-9049-064c5af7570c"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GrapplePull"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -122,6 +182,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Movement = m_Player.FindAction("Movement", throwIfNotFound: true);
         m_Player_Mouse = m_Player.FindAction("Mouse", throwIfNotFound: true);
+        m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
+        m_Player_Grapple = m_Player.FindAction("Grapple", throwIfNotFound: true);
+        m_Player_GrapplePull = m_Player.FindAction("GrapplePull", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -183,12 +246,18 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     private IPlayerActions m_PlayerActionsCallbackInterface;
     private readonly InputAction m_Player_Movement;
     private readonly InputAction m_Player_Mouse;
+    private readonly InputAction m_Player_Jump;
+    private readonly InputAction m_Player_Grapple;
+    private readonly InputAction m_Player_GrapplePull;
     public struct PlayerActions
     {
         private @PlayerInput m_Wrapper;
         public PlayerActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
         public InputAction @Movement => m_Wrapper.m_Player_Movement;
         public InputAction @Mouse => m_Wrapper.m_Player_Mouse;
+        public InputAction @Jump => m_Wrapper.m_Player_Jump;
+        public InputAction @Grapple => m_Wrapper.m_Player_Grapple;
+        public InputAction @GrapplePull => m_Wrapper.m_Player_GrapplePull;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -204,6 +273,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Mouse.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouse;
                 @Mouse.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouse;
                 @Mouse.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouse;
+                @Jump.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
+                @Jump.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
+                @Jump.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnJump;
+                @Grapple.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapple;
+                @Grapple.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapple;
+                @Grapple.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapple;
+                @GrapplePull.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapplePull;
+                @GrapplePull.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapplePull;
+                @GrapplePull.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnGrapplePull;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -214,6 +292,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Mouse.started += instance.OnMouse;
                 @Mouse.performed += instance.OnMouse;
                 @Mouse.canceled += instance.OnMouse;
+                @Jump.started += instance.OnJump;
+                @Jump.performed += instance.OnJump;
+                @Jump.canceled += instance.OnJump;
+                @Grapple.started += instance.OnGrapple;
+                @Grapple.performed += instance.OnGrapple;
+                @Grapple.canceled += instance.OnGrapple;
+                @GrapplePull.started += instance.OnGrapplePull;
+                @GrapplePull.performed += instance.OnGrapplePull;
+                @GrapplePull.canceled += instance.OnGrapplePull;
             }
         }
     }
@@ -222,5 +309,8 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     {
         void OnMovement(InputAction.CallbackContext context);
         void OnMouse(InputAction.CallbackContext context);
+        void OnJump(InputAction.CallbackContext context);
+        void OnGrapple(InputAction.CallbackContext context);
+        void OnGrapplePull(InputAction.CallbackContext context);
     }
 }
