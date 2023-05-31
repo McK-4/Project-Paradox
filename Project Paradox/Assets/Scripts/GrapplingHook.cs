@@ -87,6 +87,7 @@ public class GrapplingHook : MonoBehaviour
                 joint.massScale = massScale;
 
                 lr.enabled = true; 
+
             }
         }
     }
@@ -99,6 +100,7 @@ public class GrapplingHook : MonoBehaviour
     }
     public void Pull(Rigidbody rb, float pullForce)
     {
+        Debug.Log("Pulling");
         Vector3 pullDirection = grapplePoint - playerTransform.position;
         rb.AddForce(pullDirection.normalized * pullForce);
 

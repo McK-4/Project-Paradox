@@ -14,7 +14,8 @@ public class PlayerController : MonoBehaviour
     public Vector2 MovementInput { get; private set; }
     public bool IsJumpPressed { get; private set; } = false;
     public bool WaitForJumpRelease { get; private set; } = false;
-    public bool grapplePressed { get; private set; } = false;
+    public bool grapplePressed { get; private set; } = false;   
+    public bool grapplePullPressed { get; private set; } = false;
 
     //Movement
     [SerializeField] float movementSpeed = 3.75f;
@@ -118,6 +119,10 @@ public class PlayerController : MonoBehaviour
         {
             gh.EndGrapple();
         }
+        if (grapplePullPressed && gh.isGrappling)
+        {
+            gh.Pull(rb, 10f);
+        }
     }
     bool IsGrounded()
     {
@@ -142,5 +147,10 @@ public class PlayerController : MonoBehaviour
     public void GrappleInput(InputAction.CallbackContext context)
     {
         grapplePressed = context.ReadValue<float>() != 0;
+    }
+    public void GrapplePullInput(InputAction.CallbackContext context)
+    {
+        grapplePullPressed = context.ReadValue<float>() != 0;
+        Debug.Log("Pull Pressed");
     }
 }

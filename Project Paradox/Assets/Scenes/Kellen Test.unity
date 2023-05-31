@@ -630,6 +630,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 3e44828d-1608-4277-9835-c973fb9eb2f5
     m_ActionName: Player/New action
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1618041022}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: GrapplePullInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: b6917120-4387-4b04-b34c-efe05ead1725
+    m_ActionName: Player/GrapplePull[/Keyboard/q]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -657,8 +673,8 @@ MonoBehaviour:
     m_Bits: 8
   PlayerCamera: {fileID: 27394975}
   upAndDownMaxs: 90
-  sensitivityLeftAndRight: 500
-  sensitivityUpAndDown: 500
+  sensitivityLeftAndRight: 25
+  sensitivityUpAndDown: 25
 --- !u!54 &1618041023
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -796,7 +812,10 @@ MonoBehaviour:
   maxGrappleableDistance: 1000
   grappleableLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
+  hitableLayers:
+    serializedVersion: 2
+    m_Bits: 2147483647
   maxDistancePercent: 0.8
   minDistancePercent: 0.25
   spring: 4.5
@@ -807,13 +826,31 @@ MonoBehaviour:
   ropeSpeed: 8
   quality: 500
   ropeDamper: 14
-  strength: 800
+  strength: 0
   velocity: 15
   waveCount: 3
   waveHeight: 1
   affectCurve:
     serializedVersion: 2
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.10101098
+      value: -0.0020848513
+      inSlope: 0.92901254
+      outSlope: 0.92901254
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.26069635
+    - serializedVersion: 3
+      time: 0.898989
+      value: -0.0020848513
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
