@@ -14,11 +14,22 @@ public class PlayerController : MonoBehaviour
     public Vector2 MovementInput { get; private set; }
     public bool IsJumpPressed { get; private set; } = false;
     public bool WaitForJumpRelease { get; private set; } = false;
+    public bool sprintPressed { get; private set; } = false;
+    public bool waitForSprintRelease { get; private set; } = false;
     public bool grapplePressed { get; private set; } = false;   
     public bool grapplePullPressed { get; private set; } = false;
 
     //Movement
-    [SerializeField] float movementSpeed = 3.75f;
+    Vector3 movement;
+    //[SerializeField] float movementSpeed = 3.75f;
+    [SerializeField] float movementSpeed = 0.5f;
+    [SerializeField] float movementSpeedMax = 3.75f;
+    [SerializeField] float movementSpeedStart = 0.1f;
+    [SerializeField] float acceleration = 0.1f;
+    [SerializeField] bool moving = false;
+    private float maxVelocityX = 7.60f;
+    private float maxVelocityY = 7.60f;
+    private float maxVelocityZ = 7.60f;
     [SerializeField] float airControllAce = 3.75f;
     [SerializeField] float sprintMultiplier = 1.5f;
     [SerializeField] float jumpPower = 350;
@@ -47,26 +58,113 @@ public class PlayerController : MonoBehaviour
         updateLook();
         updateMove();
         updateGrapple();
+
+        //This can be removed, just for testing:
+        //transform.rotation = Quaternion.Euler(0, 0, 0);
+
+        if(transform.position.y < -40)
+        {
+            transform.position = new Vector3(transform.position.x, 20, transform.position.z);
+        }
     }
     void updateMove()
     {
-        Vector3 movement = rb.velocity;
+        movement = rb.velocity;
+
+        if (!sprintPressed)//&& waitForSprintRelease)
+        {
+            //speedMultiplier = 1;
+            if (speedMultiplier <= 1)
+            {
+                speedMultiplier = 1.02f;
+            }
+
+            else if (speedMultiplier > 1.02)
+            {
+                speedMultiplier -= 2f * Time.deltaTime;
+                Debug.Log(speedMultiplier);
+            }
+            waitForSprintRelease = false;
+        }
+
         if (IsGrounded())
         {
-            //resetting the ability to jump
+            //resetting the ability to jump and sprint
             if (WaitForJumpRelease && !IsJumpPressed)
             {
                 WaitForJumpRelease = false;
             }
+            /*
+            if (!sprintPressed )//&& waitForSprintRelease)
+            {
+                //speedMultiplier = 1;
+                if (speedMultiplier <= 1)
+                {
+                    speedMultiplier = 1.02f;
+                }
 
-            //snapy movement on the ground. forward to get characters forward and go that direction right to get strafing.
+                else if (speedMultiplier > 1.02)
+                {
+                    speedMultiplier -= 2f * Time.deltaTime;
+                    Debug.Log(speedMultiplier);
+                }
+                waitForSprintRelease = false;
+            }
+
+            /*
+            if(MovementInput != Vector2.zero)
+            {
+                moving = true;
+            }
+            else
+            {
+                moving = false;
+            }
+
+            if (movementSpeed <= movementSpeedStart && !moving)
+            {
+                movementSpeed = movementSpeedStart;
+            }
+
+            if (movementSpeed >= movementSpeedMax)
+            {
+                movementSpeed = movementSpeedMax;
+            }
+
+            if (moving)
+            {
+                movementSpeed += acceleration;
+            }
+            else
+            {
+                movementSpeed -= (acceleration * 100);
+            }
+            */
+
+            //snapy movement on the ground. forward to get characters forward and go that direction right to get strafing. (Needs to be adjusted for smoother movement)
             movement = ((transform.forward * MovementInput.y) + (transform.right * MovementInput.x)) * (movementSpeed * speedMultiplier);
 
-            //for jumping
+            //Jumping
             if(IsJumpPressed && !WaitForJumpRelease)
             {
                 rb.AddForce(new Vector3(0,jumpPower,0));
                 WaitForJumpRelease = true;
+            }
+
+            //Sprinting
+            if(sprintPressed )//&& !waitForSprintRelease)
+            {
+                if (speedMultiplier >= 4)
+                {
+                    speedMultiplier = 4;
+                }
+
+                else if(speedMultiplier < 4)
+                {
+                    speedMultiplier += 1f * Time.deltaTime;
+                    Debug.Log(speedMultiplier);
+                }
+                waitForSprintRelease = true;
             }
         }
         else
@@ -81,8 +179,8 @@ public class PlayerController : MonoBehaviour
         }
         movement.y = rb.velocity.y;
         rb.velocity = movement;
+        //rb.velocity = new Vector3(Mathf.Clamp(rb.velocity.x, -maxVelocityX, maxVelocityX), Mathf.Clamp(rb.velocity.y, -maxVelocityY, maxVelocityY), Mathf.Clamp(rb.velocity.z, -maxVelocityZ, maxVelocityZ));
 
-        
     }
     void updateLook()
     {
@@ -124,10 +222,12 @@ public class PlayerController : MonoBehaviour
             gh.Pull(rb, 10f);
         }
     }
+
     bool IsGrounded()
     {
         return Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, rayCastDownDist, groundLayer);
     }
+
     public void SetMovementInput(InputAction.CallbackContext context)
     {
         MovementInput = context.ReadValue<Vector2>().normalized;
@@ -138,12 +238,17 @@ public class PlayerController : MonoBehaviour
         MouseInput = context.ReadValue<Vector2>();
 
     }
+
     public void SetJumpInput(InputAction.CallbackContext context)
     {
         IsJumpPressed = context.ReadValue<float>() != 0;
         
     }
 
+    public void SetSprintInput(InputAction.CallbackContext context)
+    {
+        sprintPressed = context.ReadValue<float>() != 0;
+    }
     public void GrappleInput(InputAction.CallbackContext context)
     {
         grapplePressed = context.ReadValue<float>() != 0;
@@ -151,6 +256,5 @@ public class PlayerController : MonoBehaviour
     public void GrapplePullInput(InputAction.CallbackContext context)
     {
         grapplePullPressed = context.ReadValue<float>() != 0;
-        Debug.Log("Pull Pressed");
     }
 }
