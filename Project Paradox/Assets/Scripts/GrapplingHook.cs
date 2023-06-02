@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 [RequireComponent(typeof(LineRenderer))]
 public class GrapplingHook : MonoBehaviour
@@ -22,19 +23,18 @@ public class GrapplingHook : MonoBehaviour
     [SerializeField] Transform gun;
     [SerializeField] float rotationSpeed;
     [Header("Rope Looks")]
-    LineRenderer lr;
-    [SerializeField] float ropeSpeed = 8;
+    [SerializeField] [Tooltip("How quickly it goes out")] float ropeSpeed = 8;
     [SerializeField] [Tooltip("Number of sections rope has")] int quality = 500;
-    [SerializeField] [Tooltip("How long the waves last")] float ropeDamper = 14;
-    [SerializeField] [Tooltip("unsure")] float strength = 800;
-    [SerializeField] [Tooltip("unsure")] float velocity = 15;
-    [SerializeField] [Tooltip("Number of waves")] float waveCount = 3;
-    [SerializeField] [Tooltip("How big the waves are")] float waveHeight = 1;
-    [SerializeField] [Tooltip("what the waves will look like(have both ends at 0)")] AnimationCurve affectCurve;
+    [SerializeField] [Tooltip("How quickly the waves will grow and shrink")] float ropeDamper = 14;
+    [SerializeField] [Tooltip("How quickly the waves shrink as they go further")] float strength = 1 / 15;
+    [SerializeField] [Tooltip("What the max height of the waves will be")] float velocity = 15;
+    [SerializeField] [Tooltip("The distance between each wave")] float waveDistance = 15f;
+    [SerializeField] [Tooltip("Changes how it is represented on a graph")] int xRange = 500;
 
+    LineRenderer lr;
     private Vector3 currentLrPoint;
     private Vector3 grapplePoint;
-    private Spring springRopeCalcs;
+    private float currentVel;
 
     private SpringJoint joint;
 
@@ -48,8 +48,6 @@ public class GrapplingHook : MonoBehaviour
     {
         lr = gameObject.GetComponent<LineRenderer>();
         lr.enabled = false;
-        springRopeCalcs = new Spring();
-        springRopeCalcs.SetTarget(0);
     }
     private void Update()
     {
@@ -60,16 +58,16 @@ public class GrapplingHook : MonoBehaviour
         DrawRope();
     }
 
-
     public void StartGrapple()
     {
         //seeing if we hit something
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit hit, maxGrappleableDistance, hitableLayers))
         {
             //checking if grappalable
-            if (grappleableLayers == (grappleableLayers | (1 << hit.transform.gameObject.layer))){
+            if (grappleableLayers == (grappleableLayers | (1 << hit.transform.gameObject.layer)))
+            {
+                currentVel = 0;
                 lr.positionCount = quality + 1;
-                springRopeCalcs.SetVelocity(velocity);
                 currentLrPoint = gunTipTransform.position;
 
                 grapplePoint = hit.point;
@@ -86,8 +84,7 @@ public class GrapplingHook : MonoBehaviour
                 joint.damper = damper;
                 joint.massScale = massScale;
 
-                lr.enabled = true; 
-
+                lr.enabled = true;
             }
         }
     }
@@ -95,7 +92,6 @@ public class GrapplingHook : MonoBehaviour
     {
         lr.positionCount = 0;
         lr.enabled = false;
-        springRopeCalcs.Reset();
         Destroy(joint);
     }
     public void Pull(Rigidbody rb, float pullForce)
@@ -109,50 +105,53 @@ public class GrapplingHook : MonoBehaviour
         joint.maxDistance = distanceFromPoint * maxDistancePercent;
         joint.minDistance = distanceFromPoint * minDistancePercent;
     }
-
     public void RotateGun()
     {
-        if (gun != null)
+
+        if (!isGrappling)
         {
-
-
-            if (!isGrappling)
-            {
-                desiredGunRotation = gun.parent.transform.rotation;
-            }
-            else
-            {
-                desiredGunRotation = Quaternion.LookRotation(grapplePoint - gun.transform.position);
-            }
-
-            gun.rotation = Quaternion.Lerp(gun.transform.rotation, desiredGunRotation, Time.deltaTime * rotationSpeed);
+            desiredGunRotation = gun.parent.transform.rotation;
         }
+        else
+        {
+            desiredGunRotation = Quaternion.LookRotation(grapplePoint - gun.transform.position);
+        }
+
+        gun.rotation = Quaternion.Lerp(gun.transform.rotation, desiredGunRotation, Time.deltaTime * rotationSpeed);
+
     }
     public void DrawRope()
     {
         if (!isGrappling)
             return;
 
-        /*springRopeCalcs.SetDamper(ropeDamper);
-        springRopeCalcs.SetStrength(strength);
-        springRopeCalcs.Update(Time.deltaTime);
-
-        Vector3 ropeUp = Quaternion.LookRotation((grapplePoint - gunTipTransform.position).normalized) * Vector3.up;
+        Vector3 ropeRight = gun.right;
 
         for (int i = 0; i < quality + 1; i++)
         {
-            float delta = (float)i / quality;
-            Vector3 offset = ropeUp * waveHeight * Mathf.Sin(delta * waveCount * Mathf.PI) * springRopeCalcs.Value * affectCurve.Evaluate(delta);
+            float x = ((float)i / (quality + 1)) * xRange;
 
-            lr.SetPosition(i, Vector3.Lerp(grapplePoint, currentLrPoint, delta) + offset);
+            float V = (-strength * x + currentVel) > 0 ? (-strength * x + currentVel) : 0;
+
+            float rightMultiplier = V * Mathf.Sin(x / waveDistance);
+
+
+            float distanceOut = (Vector3.Distance(currentLrPoint, gunTipTransform.position) / (quality + 1)) * i;
+
+            Vector3 newPoint = gunTipTransform.position +
+                ((currentLrPoint - gunTipTransform.position).normalized * distanceOut) + (ropeRight * rightMultiplier);
+            lr.SetPosition(i, newPoint);
         }
 
-        currentLrPoint = Vector3.Lerp(currentLrPoint, grapplePoint, Time.deltaTime * ropeSpeed);
-        */
-        lr.positionCount = 2;
-        lr.SetPosition(0, gunTipTransform.position);
-        lr.SetPosition(1, currentLrPoint);
-        currentLrPoint = Vector3.Lerp(currentLrPoint, grapplePoint, Time.deltaTime * ropeSpeed);
+        currentLrPoint = Vector3.MoveTowards(currentLrPoint, grapplePoint, Time.deltaTime * ropeSpeed);
 
+        if (currentLrPoint != grapplePoint)
+        {
+            currentVel = Mathf.Clamp(currentVel + Time.deltaTime * ropeDamper, 0, velocity);
+        }
+        else
+        {
+            currentVel = Mathf.Clamp(currentVel - Time.deltaTime * ropeDamper, 0, velocity);
+        }
     }
 }
