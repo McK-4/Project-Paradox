@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     //rigidbody for movement
     Rigidbody rb;
-    
+
     GrapplingHook gh;
     //controlls
     public Vector2 MouseInput { get; private set; }
@@ -15,8 +15,10 @@ public class PlayerController : MonoBehaviour
     public bool IsJumpPressed { get; private set; } = false;
     public bool WaitForJumpRelease { get; private set; } = false;
     public bool sprintPressed { get; private set; } = false;
-    public bool waitForSprintRelease { get; private set; } = false;
-    public bool grapplePressed { get; private set; } = false;   
+    //public bool waitForSprintRelease { get; private set; } = false;
+    public bool crouchPressed { get; private set; } = false;
+    public bool waitForCrouchRelease { get; private set; } = false;
+    public bool grapplePressed { get; private set; } = false;
     public bool grapplePullPressed { get; private set; } = false;
 
     //Movement
@@ -30,19 +32,29 @@ public class PlayerController : MonoBehaviour
     private float maxVelocityX = 7.60f;
     private float maxVelocityY = 7.60f;
     private float maxVelocityZ = 7.60f;
+    //Sprint
+    public float speedMultiplier { get; set; } = 1;
+    //Jumping
     [SerializeField] float airControllAce = 3.75f;
-    [SerializeField] float sprintMultiplier = 1.5f;
+    //[SerializeField] float sprintMultiplier = 1.5f;
     [SerializeField] float jumpPower = 350;
     [SerializeField] float rayCastDownDist = 1.1f;
     [SerializeField] LayerMask groundLayer;
+    //Crouching
+    [SerializeField] float crouchSpeed = 1.2f;
+    [SerializeField] float localCrouchYScale = 0.5f;
+    [SerializeField] float targetcrouchYScale = 0.5f;
+    private float startYScale;
+
 
     //camera
+    [SerializeField] Camera cam;
     [SerializeField] Transform PlayerCamera;
     [SerializeField] float upAndDownMaxs = 90f;
     public float sensitivityLeftAndRight = 10f;
     public float sensitivityUpAndDown = 50f;
+    private float camFOV;
 
-    public float speedMultiplier { get; set; } = 1;
     // Start is called before the first frame update
     void Start()
     {
@@ -50,6 +62,8 @@ public class PlayerController : MonoBehaviour
         gh = GetComponent<GrapplingHook>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        camFOV = cam.fieldOfView;
+        startYScale = transform.localScale.y;
     }
 
     // Update is called once per frame
@@ -71,20 +85,39 @@ public class PlayerController : MonoBehaviour
     {
         movement = rb.velocity;
 
+        localCrouchYScale = transform.localScale.y;
+
         if (!sprintPressed)//&& waitForSprintRelease)
         {
             //speedMultiplier = 1;
-            if (speedMultiplier <= 1)
+            if (speedMultiplier < 1)
             {
-                speedMultiplier = 1.02f;
+                speedMultiplier = 1;// .02f;
+                camFOV = 60;// .1f;
             }
 
             else if (speedMultiplier > 1.02)
             {
-                speedMultiplier -= 2f * Time.deltaTime;
+                speedMultiplier -= 3f * Time.deltaTime;
+                camFOV -= 3.4f * Time.deltaTime;
+                cam.fieldOfView = camFOV;
+                Debug.Log("Cam FOV: " + cam.fieldOfView);
                 Debug.Log(speedMultiplier);
             }
-            waitForSprintRelease = false;
+        }
+
+        if (!IsGrounded() && transform.localScale.y != startYScale)
+        {
+            localCrouchYScale += crouchSpeed * Time.deltaTime;
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            /*
+            if(speedMultiplier < 1)
+            {
+                speedMultiplier *= 2;
+            }
+            */
+            speedMultiplier = 1;
+            //rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
 
         if (IsGrounded())
@@ -161,11 +194,27 @@ public class PlayerController : MonoBehaviour
 
                 else if(speedMultiplier < 4)
                 {
-                    speedMultiplier += 1f * Time.deltaTime;
+                    speedMultiplier += 1.5f * Time.deltaTime;
+                    camFOV += 1.7f * Time.deltaTime;
+                    cam.fieldOfView = camFOV;
+                    Debug.Log("Cam FOV: " + cam.fieldOfView);
                     Debug.Log(speedMultiplier);
                 }
-                waitForSprintRelease = true;
             }
+
+            //Crouching
+            if (crouchPressed && localCrouchYScale > targetcrouchYScale)
+            {
+                localCrouchYScale -= crouchSpeed * Time.deltaTime;
+                //rb.AddForce(Vector3.down *5f, ForceMode.Impulse);
+                speedMultiplier /= 2;
+            }
+            else if (!crouchPressed && localCrouchYScale < startYScale) 
+            {
+                localCrouchYScale += crouchSpeed * Time.deltaTime;
+                speedMultiplier = 1;
+            }
+            transform.localScale = new Vector3(transform.localScale.x, localCrouchYScale, transform.localScale.z);
         }
         else
         {
@@ -249,6 +298,12 @@ public class PlayerController : MonoBehaviour
     {
         sprintPressed = context.ReadValue<float>() != 0;
     }
+
+    public void CrouchInput(InputAction.CallbackContext context)
+    {
+        crouchPressed = context.ReadValue<float>() != 0;
+    }
+
     public void GrappleInput(InputAction.CallbackContext context)
     {
         grapplePressed = context.ReadValue<float>() != 0;

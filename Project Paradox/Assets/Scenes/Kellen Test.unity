@@ -873,6 +873,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 328ef0f0-ee0f-4b30-978d-d1cdef827b41
     m_ActionName: Player/Sprint[/Keyboard/shift]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1618041022}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: CrouchInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: fdae01bd-75aa-490b-9365-547a1f92ca6b
+    m_ActionName: Player/Crouch[/Keyboard/ctrl]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -896,12 +912,15 @@ MonoBehaviour:
   acceleration: 0.1
   moving: 0
   airControllAce: 3.75
-  sprintMultiplier: 1.5
   jumpPower: 350
   rayCastDownDist: 1.1
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  crouchSpeed: 0.7
+  localCrouchYScale: 0.5
+  targetcrouchYScale: 0.5
+  cam: {fileID: 27394974}
   PlayerCamera: {fileID: 27394975}
   upAndDownMaxs: 90
   sensitivityLeftAndRight: 25
@@ -1056,35 +1075,11 @@ MonoBehaviour:
   rotationSpeed: 45
   ropeSpeed: 8
   quality: 500
-  ropeDamper: 14
-  strength: 0
-  velocity: 15
-  waveCount: 3
-  waveHeight: 1
-  affectCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: -0.10101098
-      value: -0.0020848513
-      inSlope: 0.92901254
-      outSlope: 0.92901254
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.26069635
-    - serializedVersion: 3
-      time: 0.898989
-      value: -0.0020848513
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  ropeDamper: 20
+  strength: 0.02
+  velocity: 6
+  waveDistance: 15
+  xRange: 500
 --- !u!1 &1630980215
 GameObject:
   m_ObjectHideFlags: 0
